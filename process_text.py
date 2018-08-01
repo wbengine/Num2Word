@@ -2,7 +2,7 @@
 
 from Num2Word import numToWords, numToPlace, yearToWords, floatToWords
 
-import os, argparse
+import os, argparse, sys
 import re
 
 
@@ -56,12 +56,10 @@ def trans_digits(s):
 
 def main():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--text', help='the input text', type=str)
-	parser.add_argument('--output', help='write the text', type=str)
-	parser.add_argument('--log', help='the log information', type=str, default='process_text.log')
+	parser.add_argument('--text', help='the input text, default=stdin', type=str)
+	parser.add_argument('--output', help='the output text, default=stdout', type=str)
+	parser.add_argument('--log', help='the log information', type=str)
 	args = parser.parse_args()
-
-	assert os.path.exists(args.text), 'no file: %s' % args.text
 
 	pattern_list = [
 		('year', re.compile('^((15|16|17|18|19|20|21)\d{2}s?|\d{2}s)$'), trans_year),  # year
@@ -73,38 +71,52 @@ def main():
 		('faction', re.compile('^\d+/\d+$'), trans_fraction),  # 24/7
 		('unknown', re.compile('^\D*\d+\D*'), trans_digits),   # others u2, 4g ...
 		]
-	with open(args.text) as f, open(args.output, 'wt') as fout, open(args.log, 'wt') as flog:
-		for line in f:
 
-			# no digits
-			if not re.findall('\d+', line):
-				fout.write(line)
-				continue
+	f = sys.stdin if args.text is None else open(args.text)
+	fout = sys.stdout if args.output is None else open(args.output, 'wt')
+	flog = None if args.log is None else open(args.log, 'wt')
 
-			res_w = []
-			for w in line.split():
-				if not re.findall('\d+', w):
-					res_w.append(w)
+	for line in f:
+
+		# no digits
+		if not re.findall('\d+', line):
+			fout.write(line)
+			continue
+
+		res_w = []
+		for w in line.split():
+			if not re.findall('\d+', w):
+				res_w.append(w)
+			else:
+				new_w = w
+				is_trans = False
+				trans_name = None
+				for name, p, fun in pattern_list:
+					if p.match(w):
+						new_w = fun(w)
+						is_trans = True
+						trans_name = name
+						break
+
+				if not is_trans:
+					raise TypeError('unknown %s in %s\n' % (w, line[0:-1]))
 				else:
-					new_w = w
-					is_trans = False
-					trans_name = None
-					for name, p, fun in pattern_list:
-						if p.match(w):
-							new_w = fun(w)
-							is_trans = True
-							trans_name = name
-							break
-
-					if not is_trans:
-						raise TypeError('unknown %s in %s\n' % (w, line[0:-1]))
-					else:
+					if flog:
 						flog.write('[%s] replace %s -> %s in %s\n' % (trans_name, w, new_w, line[0:-1]))
-					flog.flush()
-					res_w.append(new_w)
+						flog.flush()
 
-			fout.write(' '.join(res_w) + '\n')
-			fout.flush()
+				res_w.append(new_w)
+
+		fout.write(' '.join(res_w) + '\n')
+		fout.flush()
+
+	# close file
+	if f != sys.stdin:
+		f.close()
+	if fout != sys.stdout:
+		fout.close()
+	if flog:
+		flog.close()
 
 
 if __name__ == '__main__':
