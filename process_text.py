@@ -59,6 +59,7 @@ def main():
 	parser.add_argument('--text', help='the input text, default=stdin', type=str)
 	parser.add_argument('--output', help='the output text, default=stdout', type=str)
 	parser.add_argument('--log', help='the log information', type=str)
+	parser.add_argument('--skip_head', help='[int], if = 1, then skip the first 1 column of each line', type=int, default=0)
 	args = parser.parse_args()
 
 	pattern_list = [
@@ -78,11 +79,12 @@ def main():
 
 	for line in f:
 
-		# no digits
-		if not re.findall('\d+', line):
-			fout.write(line)
-			continue
+		# extract the skipped head
+		a = line.split()
+		head = ' '.join(a[0: args.skip_head])
+		line = ' '.join(a[args.skip_head:])
 
+		# remove the digit
 		res_w = []
 		for w in line.split():
 			if not re.findall('\d+', w):
@@ -107,7 +109,7 @@ def main():
 
 				res_w.append(new_w)
 
-		fout.write(' '.join(res_w) + '\n')
+		fout.write(head + ' ' + ' '.join(res_w) + '\n')
 		fout.flush()
 
 	# close file
