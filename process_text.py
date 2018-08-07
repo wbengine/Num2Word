@@ -101,7 +101,8 @@ def main():
 						break
 
 				if not is_trans:
-					raise TypeError('unknown %s in %s\n' % (w, line[0:-1]))
+					if flog:
+						sys.stderr.write('unknown %s in %s\n' % (w, line[0:-1]))
 				else:
 					if flog:
 						flog.write('[%s] replace %s -> %s in %s\n' % (trans_name, w, new_w, line[0:-1]))
