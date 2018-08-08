@@ -53,16 +53,7 @@ def trans_digits(s):
 			res += c
 	return res
 
-
-def main():
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--text', help='the input text, default=stdin', type=str)
-	parser.add_argument('--output', help='the output text, default=stdout', type=str)
-	parser.add_argument('--log', help='the log information', type=str)
-	parser.add_argument('--skip_head', help='[int], if = 1, then skip the first 1 column of each line', type=int, default=0)
-	args = parser.parse_args()
-
-	pattern_list = [
+pattern_list = [
 		('year', re.compile('^((15|16|17|18|19|20|21)\d{2}s?|\d{2}s)$'), trans_year),  # year
 		('int', re.compile('^[,\d]+$'), trans_int),		 # integer, e.g. 10, 23
 		('float', re.compile('^\d+\.\d+$'), floatToWords),		 # float, e.g. 10.2, 3.4
@@ -72,17 +63,15 @@ def main():
 		('faction', re.compile('^\d+/\d+$'), trans_fraction),  # 24/7
 		('unknown', re.compile('^\D*\d+\D*'), trans_digits),   # others u2, 4g ...
 		]
-
-	f = sys.stdin if args.text is None else open(args.text)
-	fout = sys.stdout if args.output is None else open(args.output, 'wt')
-	flog = None if args.log is None else open(args.log, 'wt')
-
-	for line in f:
+		
+		
+def process(fin, fout, flog, skip_head):
+	for line in fin:
 
 		# extract the skipped head
 		a = line.split()
-		head = ' '.join(a[0: args.skip_head])
-		line = ' '.join(a[args.skip_head:])
+		head = ' '.join(a[0: skip_head])
+		line = ' '.join(a[skip_head:])
 
 		# remove the digit
 		res_w = []
@@ -112,6 +101,22 @@ def main():
 
 		fout.write(head + ' ' + ' '.join(res_w) + '\n')
 		fout.flush()
+
+
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--text', help='the input text, default=stdin', type=str)
+	parser.add_argument('--output', help='the output text, default=stdout', type=str)
+	parser.add_argument('--log', help='the log information', type=str)
+	parser.add_argument('--skip_head', help='[int], if = 1, then skip the first 1 column of each line', type=int, default=0)
+	args = parser.parse_args()
+
+	f = sys.stdin if args.text is None else open(args.text)
+	fout = sys.stdout if args.output is None else open(args.output, 'wt')
+	flog = None if args.log is None else open(args.log, 'wt')
+
+	process(f, fout, flog, args.skip_head)
 
 	# close file
 	if f != sys.stdin:
