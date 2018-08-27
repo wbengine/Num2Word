@@ -67,6 +67,7 @@ pattern_list = [
 		
 def process(fin, fout, flog, skip_head):
 	for line in fin:
+		line = line.strip()
 
 		# extract the skipped head
 		a = line.split()
@@ -91,10 +92,10 @@ def process(fin, fout, flog, skip_head):
 
 				if not is_trans:
 					if flog:
-						sys.stderr.write('unknown %s in %s\n' % (w, line[0:-1]))
+						sys.stderr.write('unknown %s in %s\n' % (w, line))
 				else:
 					if flog:
-						flog.write('[%s] replace %s -> %s in %s\n' % (trans_name, w, new_w, line[0:-1]))
+						flog.write('[%s] replace %s -> %s in %s\n' % (trans_name, w, new_w, line))
 						flog.flush()
 
 				res_w.append(new_w)
