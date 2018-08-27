@@ -61,7 +61,7 @@ pattern_list = [
 		('time', re.compile('^\d{1,2}:\d{1,2}$'), trans_time),   # time, 7:00, 12:30
 		('money', re.compile('^\$(\d+|\d+\.\d+)$'), trans_money),   # $1, $10, $9.5
 		('faction', re.compile('^\d+/\d+$'), trans_fraction),  # 24/7
-		('unknown', re.compile('^\D*\d+\D*'), trans_digits),   # others u2, 4g ...
+		('unknown', re.compile('^\D*\d+\D*'), lambda x: x),   # others u2, 4g ...
 		]
 		
 		
